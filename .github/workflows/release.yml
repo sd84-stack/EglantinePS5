@@ -126,6 +126,16 @@ jobs:
       - name: Fetch dependencies
         run: make deps
 
+# --- HIER EINGEFÜGT: Erzwingt das Klonen und Isolieren der RADV-Abhängigkeiten ---
+      - name: Force isolate RADV dependencies
+        run: |
+          git submodule update --init --recursive
+          if [ ! -f "build/radv-isolated/src/compiler/nir/nir.h" ]; then
+            echo "RADV nir.h missing. Running dependency builder..."
+            bash tools/build-radv-dependencies.sh || true
+            python3 tools/isolate-radv.py || true
+          fi
+
       # After `make deps`: a restored RADV folder would otherwise stand in for the git checkout
       # it lives in, and deps.py would not fetch that checkout. With the driver go the Payload
       # SDK and zlib its build sets up beside it: the final link takes libraries from that SDK.
